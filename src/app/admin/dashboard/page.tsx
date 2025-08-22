@@ -47,6 +47,7 @@ export default function AdminDashboard() {
     slot?: SlotStatus;
     registrations?: Registration[];
   }>({ open: false });
+  const [scrollPosition, setScrollPosition] = useState(0);
 
   useEffect(() => {
     // 관리자 토큰 확인
@@ -62,6 +63,17 @@ export default function AdminDashboard() {
       fetchSlots(selectedDate);
     }
   }, [selectedDate]);
+
+  // 다이얼로그 닫힐 때 스크롤 위치 복원
+  useEffect(() => {
+    if (!detailDialog.open && scrollPosition > 0) {
+      const timer = setTimeout(() => {
+        window.scrollTo(0, scrollPosition);
+      }, 0);
+
+      return () => clearTimeout(timer);
+    }
+  }, [detailDialog.open, scrollPosition]);
 
   const fetchSlots = async (date: Date) => {
     setIsLoading(true);
@@ -97,16 +109,15 @@ export default function AdminDashboard() {
 
   const fetchSlotDetails = async (slot: SlotStatus) => {
     setIsLoading(true);
+
+    // 현재 스크롤 위치 저장
+    setScrollPosition(window.pageYOffset || document.documentElement.scrollTop);
+
     try {
+      // user_registrations 뷰를 사용하여 더 간단하게 조회
       const { data, error } = await supabase
-        .from('registrations')
-        .select(
-          `
-          id,
-          created_at,
-          user:users(name, parish, phone_last_4)
-        `
-        )
+        .from('user_registrations')
+        .select('id, name, parish, phone_last_4, created_at')
         .eq('slot_id', slot.id)
         .order('created_at');
 
@@ -115,23 +126,13 @@ export default function AdminDashboard() {
       }
 
       const registrations =
-        data?.map(
-          (reg: {
-            id: string;
-            created_at: string;
-            user: {
-              name: string;
-              parish: string;
-              phone_last_4: string;
-            }[];
-          }) => ({
-            id: reg.id,
-            name: reg.user[0]?.name || '',
-            parish: reg.user[0]?.parish || '',
-            phone_last_4: reg.user[0]?.phone_last_4 || '',
-            created_at: reg.created_at,
-          })
-        ) || [];
+        data?.map((reg) => ({
+          id: reg.id,
+          name: reg.name || '',
+          parish: reg.parish || '',
+          phone_last_4: reg.phone_last_4 || '',
+          created_at: reg.created_at,
+        })) || [];
 
       setDetailDialog({
         open: true,

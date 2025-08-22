@@ -291,7 +291,7 @@ export default function ApplyPage() {
 
       <div className="text-center">
         <Link href="/register">
-          <Button variant="ghost" className="text-base">
+          <Button variant="ghost" className="h-12 px-6 text-base font-medium">
             이전 페이지로 돌아가기
           </Button>
         </Link>
@@ -304,13 +304,16 @@ export default function ApplyPage() {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>신청 확인</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-xl font-semibold">
+              신청 확인
+            </DialogTitle>
+            <DialogDescription className="text-base text-muted-foreground">
               {confirmDialog.slot && (
                 <>
                   {formatDate(confirmDialog.slot.date)}{' '}
                   {formatTime(confirmDialog.slot.start_time)}~
-                  {formatTime(confirmDialog.slot.end_time)} 시간대로
+                  {formatTime(confirmDialog.slot.end_time)}
+                  <br />
                   신청하시겠습니까?
                 </>
               )}
@@ -319,11 +322,13 @@ export default function ApplyPage() {
           <DialogFooter>
             <Button
               variant="outline"
+              className="h-12 px-8 text-base font-medium"
               onClick={() => setConfirmDialog({ open: false })}
             >
               취소
             </Button>
             <Button
+              className="h-12 px-8 text-base font-medium"
               onClick={() =>
                 confirmDialog.slot && handleApply(confirmDialog.slot)
               }

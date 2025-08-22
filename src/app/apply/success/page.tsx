@@ -79,10 +79,15 @@ export default function ApplySuccessPage() {
 
             <div className="space-y-3 pt-4">
               <Link href="/my-registrations" className="block">
-                <Button className="w-full">나의 신청내역 확인하기</Button>
+                <Button className="w-full h-12 text-base font-medium">
+                  나의 신청내역 확인하기
+                </Button>
               </Link>
               <Link href="/" className="block">
-                <Button variant="outline" className="w-full">
+                <Button
+                  variant="outline"
+                  className="w-full h-12 text-base font-medium"
+                >
                   시작 페이지로 이동
                 </Button>
               </Link>

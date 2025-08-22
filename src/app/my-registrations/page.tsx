@@ -268,14 +268,17 @@ export default function MyRegistrationsPage() {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>신청 취소</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-xl font-semibold">
+              신청 취소
+            </DialogTitle>
+            <DialogDescription className="text-base text-muted-foreground">
               {cancelDialog.registration && (
                 <>
                   {formatDate(cancelDialog.registration.date)}{' '}
                   {formatTime(cancelDialog.registration.start_time)}~
-                  {formatTime(cancelDialog.registration.end_time)} 시간대 신청을
-                  취소하시겠습니까?
+                  {formatTime(cancelDialog.registration.end_time)}
+                  <br />
+                  신청을 취소하시겠습니까?
                 </>
               )}
             </DialogDescription>
@@ -283,12 +286,14 @@ export default function MyRegistrationsPage() {
           <DialogFooter>
             <Button
               variant="outline"
+              className="h-12 px-8 text-base font-medium"
               onClick={() => setCancelDialog({ open: false })}
             >
               아니오
             </Button>
             <Button
               variant="destructive"
+              className="h-12 px-8 text-base font-medium"
               onClick={() =>
                 cancelDialog.registration &&
                 handleCancel(cancelDialog.registration)
