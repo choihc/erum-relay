@@ -1,0 +1,334 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+
+import { DayPicker } from 'react-day-picker';
+import {
+  CSSLoading,
+  CSSInlineLoading,
+  CSSButtonLoading,
+} from '@/components/ui/css-loading';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Loading } from '@/components/ui/loading';
+
+interface SlotStatus {
+  id: string;
+  date: string;
+  start_time: string;
+  end_time: string;
+  max_participants: number;
+  current_participants: number;
+  available_spots: number;
+}
+
+export default function ApplyPage() {
+  const router = useRouter();
+  const [userInfo, setUserInfo] = useState<any>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(
+    new Date(2025, 8, 2) // 2025년 9월 2일 (첫 번째 월요일)
+  );
+  const [slots, setSlots] = useState<SlotStatus[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [confirmDialog, setConfirmDialog] = useState<{
+    open: boolean;
+    slot?: SlotStatus;
+  }>({ open: false });
+
+  useEffect(() => {
+    // localStorage에서 사용자 정보 가져오기
+    const savedUserInfo = localStorage.getItem('userInfo');
+    if (!savedUserInfo) {
+      router.push('/register');
+      return;
+    }
+    setUserInfo(JSON.parse(savedUserInfo));
+  }, [router]);
+
+  useEffect(() => {
+    if (selectedDate) {
+      fetchSlots(selectedDate);
+    }
+  }, [selectedDate]);
+
+  const fetchSlots = async (date: Date) => {
+    setIsLoading(true);
+    setError('');
+
+    try {
+      // 로컬 시간으로 날짜 문자열 생성 (시간대 이슈 방지)
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const dateStr = `${year}-${month}-${day}`;
+
+      console.log('Fetching slots for date:', dateStr); // 디버깅용
+
+      // API 엔드포인트 사용 (자동 시간대 생성 기능 포함)
+      const response = await fetch(`/api/slots?date=${dateStr}`);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData.error || '시간대 정보를 불러오는데 실패했습니다.'
+        );
+      }
+
+      const result = await response.json();
+      setSlots(result.slots || []);
+    } catch (err: any) {
+      console.error('Error fetching slots:', err);
+      setError(err.message || '시간대 정보를 불러오는데 실패했습니다.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleApply = async (slot: SlotStatus) => {
+    if (!userInfo) return;
+
+    setError('');
+
+    try {
+      const response = await fetch('/api/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userInfo,
+          slotId: slot.id,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || '신청에 실패했습니다.');
+      }
+
+      // 성공 시 신청 완료 페이지로 이동
+      localStorage.setItem(
+        'lastRegistration',
+        JSON.stringify({
+          name: userInfo.name,
+          date: slot.date,
+          startTime: slot.start_time,
+          endTime: slot.end_time,
+        })
+      );
+      router.push('/apply/success');
+    } catch (err: any) {
+      console.error('Error:', err);
+      setError(err.message || '신청에 실패했습니다.');
+    } finally {
+      setConfirmDialog({ open: false });
+    }
+  };
+
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr + 'T00:00:00'); // 시간대 이슈 방지
+    return `${date.getMonth() + 1}월 ${date.getDate()}일`;
+  };
+
+  const formatTime = (timeStr: string) => {
+    return timeStr.substring(0, 5);
+  };
+
+  // 평일만 선택 가능하도록 필터링
+  const isWeekday = (date: Date) => {
+    const day = date.getDay();
+    return day >= 1 && day <= 5; // 월요일(1) ~ 금요일(5)
+  };
+
+  if (!userInfo) {
+    return <Loading size="lg" fullScreen />;
+  }
+
+  return (
+    <div className="container mx-auto px-4 py-8 max-w-4xl">
+      {/* 헤더 */}
+      <div className="text-center mb-8">
+        <h1 className="text-3xl font-bold text-primary mb-2">기도 시간 신청</h1>
+        <p className="text-lg text-muted-foreground">
+          원하시는 날짜와 시간을 선택해주세요
+        </p>
+      </div>
+
+      {error && (
+        <Alert variant="destructive" className="mb-6">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
+      {/* 캘린더 섹션 */}
+      <div className="mb-8">
+        <div className="flex justify-center">
+          <DayPicker
+            mode="single"
+            selected={selectedDate}
+            onSelect={(date) => {
+              console.log('Selected date:', date); // 디버깅용
+              setSelectedDate(date);
+            }}
+            disabled={(date) => !isWeekday(date) || date < new Date()}
+            startMonth={new Date(2025, 8)} // 2025년 9월 (0-based)
+            endMonth={new Date(2025, 8)} // 2025년 9월만
+            defaultMonth={new Date(2025, 8)} // 기본으로 9월 표시
+            showOutsideDays={false}
+            fixedWeeks={false}
+            numberOfMonths={1}
+            modifiers={{
+              selected: selectedDate || undefined,
+            }}
+            modifiersClassNames={{
+              selected: 'bg-orange-600 text-white !font-bold  shadow-xl',
+            }}
+            className="rounded-md border p-6 bg-background shadow-sm"
+            classNames={{
+              months:
+                'flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0',
+              month: 'space-y-4',
+              caption: 'flex justify-center pt-1 relative items-center',
+              caption_label: 'text-lg font-semibold text-primary',
+              nav: 'hidden',
+              table: 'w-full border-collapse space-y-1',
+              head_row: 'flex',
+              head_cell:
+                'text-muted-foreground rounded-md w-12 font-normal text-sm text-center',
+              row: 'flex w-full mt-2',
+              cell: 'text-center text-sm p-0 relative [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20',
+              day: 'h-12 w-12 p-0 font-normal hover:bg-accent hover:text-accent-foreground rounded-md transition-colors text-center',
+              day_selected:
+                'bg-primary text-primary-foreground hover:bg-primary focus:bg-primary',
+              day_today: 'bg-accent text-accent-foreground font-semibold',
+              day_outside: 'hidden',
+              day_disabled:
+                'text-muted-foreground opacity-30 cursor-not-allowed hover:bg-transparent',
+              day_range_middle:
+                'aria-selected:bg-accent aria-selected:text-accent-foreground',
+              day_hidden: 'invisible',
+            }}
+            formatters={{
+              formatWeekdayName: (day: Date) => {
+                const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
+                return weekdays[day.getDay()];
+              },
+            }}
+            components={{
+              MonthCaption: () => (
+                <div className="flex justify-center items-center py-2">
+                  <h3 className="text-lg font-semibold text-primary">
+                    2025년 9월 가을 릴레이 기도
+                  </h3>
+                </div>
+              ),
+            }}
+          />
+        </div>
+      </div>
+
+      {/* 시간대 선택 섹션 */}
+      {selectedDate && (
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold text-center mb-6">
+            {selectedDate.getMonth() + 1}월 {selectedDate.getDate()}일 시간대
+            선택
+          </h2>
+
+          {isLoading ? (
+            <Loading />
+          ) : slots.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              해당 날짜에 이용 가능한 시간대가 없습니다.
+            </div>
+          ) : (
+            <div className="space-y-3 max-w-2xl mx-auto">
+              {slots.map((slot) => (
+                <div
+                  key={slot.id}
+                  className="flex items-center justify-between p-4 border rounded-lg bg-background hover:bg-accent/50 transition-colors"
+                >
+                  <div className="flex items-center space-x-4">
+                    <span className="font-medium text-lg">
+                      {formatTime(slot.start_time)} ~{' '}
+                      {formatTime(slot.end_time)}
+                    </span>
+                    <Badge variant="secondary">
+                      신청인원 {slot.current_participants}명
+                    </Badge>
+                  </div>
+                  <Button
+                    className="h-10 px-6"
+                    disabled={slot.available_spots === 0 || isLoading}
+                    onClick={() => setConfirmDialog({ open: true, slot })}
+                  >
+                    {slot.available_spots === 0 ? '마감' : '신청하기'}
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      <div className="text-center">
+        <Link href="/register">
+          <Button variant="ghost" className="text-base">
+            이전 페이지로 돌아가기
+          </Button>
+        </Link>
+      </div>
+
+      {/* 확인 다이얼로그 */}
+      <Dialog
+        open={confirmDialog.open}
+        onOpenChange={(open) => setConfirmDialog({ open })}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>신청 확인</DialogTitle>
+            <DialogDescription>
+              {confirmDialog.slot && (
+                <>
+                  {formatDate(confirmDialog.slot.date)}{' '}
+                  {formatTime(confirmDialog.slot.start_time)}~
+                  {formatTime(confirmDialog.slot.end_time)} 시간대로
+                  신청하시겠습니까?
+                </>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setConfirmDialog({ open: false })}
+            >
+              취소
+            </Button>
+            <Button
+              onClick={() =>
+                confirmDialog.slot && handleApply(confirmDialog.slot)
+              }
+              disabled={isLoading}
+            >
+              {isLoading ? <Loading /> : '확인'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

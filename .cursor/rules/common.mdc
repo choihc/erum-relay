@@ -1,0 +1,96 @@
+---
+alwaysApply: true
+---
+
+# Cursor Development Rules
+
+# Cursor 개발 규칙
+
+## TypeScript Guidelines
+
+## 타입스크립트 가이드라인
+
+- Use TypeScript with strict type checking enabled # 엄격한 타입 검사가 활성화된 TypeScript 사용
+- Avoid using the `any` type # any 타입 사용 지양
+- Always annotate function parameters and return types # 함수 매개변수와 반환 타입 항상 명시
+- Use proper type definitions for all variables and objects # 모든 변수와 객체에 적절한 타입 정의 사용
+
+## Naming Conventions
+
+## 명명 규칙
+
+- Use camelCase for variables and functions # 변수와 함수는 camelCase 사용
+- Use PascalCase for components and classes # 컴포넌트와 클래스는 PascalCase 사용
+- Use descriptive and specific file names # 설명적이고 구체적인 파일 이름 사용
+- Maintain consistent model naming across the project # 프로젝트 전반에 걸쳐 일관된 모델 명명 유지
+
+## React Development
+
+## React 개발
+
+- Use only functional components # 함수형 컴포넌트만 사용
+- Use React hooks instead of class components # 클래스 컴포넌트 대신 React hooks 사용
+- Create a test file for each component # 각 컴포넌트마다 테스트 파일 생성
+- Follow React best practices and patterns # React 모범 사례와 패턴 준수
+
+## API Design & Implementation
+
+## API 설계 및 구현
+
+- Follow RESTful API conventions # RESTful API 규약 준수
+- Handle all API errors with try/catch blocks # 모든 API 오류는 try/catch로 처리
+- Implement retry logic for API requests # API 요청에 재시도 로직 구현
+- Use proper HTTP methods and status codes # 적절한 HTTP 메서드와 상태 코드 사용
+
+## Architecture
+
+## 아키텍처
+
+- Follow Clean Architecture principles # 클린 아키텍처 원칙 준수
+- Implement repository and service layers # 리포지토리와 서비스 계층 구현
+- Separate business logic from data access # 비즈니스 로직과 데이터 접근 분리
+- Avoid direct database access in controllers # 컨트롤러에서 직접적인 데이터베이스 접근 금지
+
+## Code Quality
+
+## 코드 품질
+
+- Keep files under 500 lines of code # 파일 크기 500줄 이하로 유지
+- Avoid magic numbers and magic strings # 매직 넘버와 매직 스트링 사용 지양
+- Use constants for repeated values # 반복되는 값은 상수로 사용
+- Maintain consistent code formatting # 일관된 코드 포맷팅 유지
+
+## Error Handling
+
+## 오류 처리
+
+- Implement comprehensive error handling # 포괄적인 오류 처리 구현
+- Provide meaningful error messages # 의미 있는 오류 메시지 제공
+- Focus on fixing root causes rather than symptoms # 증상이 아닌 근본 원인 해결에 집중
+- Document error scenarios and recovery procedures # 오류 시나리오와 복구 절차 문서화
+
+## Development Process
+
+## 개발 프로세스
+
+- Read and understand context before code modifications # 코드 수정 전 컨텍스트 이해
+- Limit modification loops to prevent infinite cycles # 무한 수정 루프 방지를 위한 제한
+- Maintain code consistency across the project # 프로젝트 전반의 코드 일관성 유지
+
+## Best Practices
+
+## 모범 사례
+
+- Write self-documenting code # 자체 문서화되는 코드 작성
+- Include appropriate comments for complex logic # 복잡한 로직에 적절한 주석 포함
+- Follow DRY (Don't Repeat Yourself) principles # DRY 원칙 준수 (코드 중복 방지)
+- Implement proper logging and monitoring # 적절한 로깅과 모니터링 구현
+
+## Code Review Guidelines
+
+## 코드 리뷰 가이드라인
+
+- Review for type safety # 타입 안전성 검토
+- Check for proper error handling # 적절한 오류 처리 확인
+- Ensure architectural guidelines are followed # 아키텍처 가이드라인 준수 확인
+- Verify naming conventions are maintained # 명명 규칙 준수 확인
