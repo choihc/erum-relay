@@ -16,7 +16,9 @@ export function Loading({
   fullScreen = false,
   className = '',
 }: LoadingProps) {
-  const lottieRef = useRef<any>(null);
+  const lottieRef = useRef<{
+    setSpeed: (speed: number) => void;
+  } | null>(null);
 
   const sizeClasses = {
     sm: 'w-20 h-20',

@@ -6,11 +6,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 
 import { DayPicker } from 'react-day-picker';
-import {
-  CSSLoading,
-  CSSInlineLoading,
-  CSSButtonLoading,
-} from '@/components/ui/css-loading';
+
 import {
   Dialog,
   DialogContent,
@@ -35,7 +31,12 @@ interface SlotStatus {
 
 export default function ApplyPage() {
   const router = useRouter();
-  const [userInfo, setUserInfo] = useState<any>(null);
+  const [userInfo, setUserInfo] = useState<{
+    name: string;
+    parish: string;
+    phone_last_4: string;
+    userId?: string;
+  } | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
     new Date(2025, 8, 2) // 2025년 9월 2일 (첫 번째 월요일)
   );
@@ -88,9 +89,13 @@ export default function ApplyPage() {
 
       const result = await response.json();
       setSlots(result.slots || []);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error fetching slots:', err);
-      setError(err.message || '시간대 정보를 불러오는데 실패했습니다.');
+      setError(
+        err instanceof Error
+          ? err.message
+          : '시간대 정보를 불러오는데 실패했습니다.'
+      );
     } finally {
       setIsLoading(false);
     }
@@ -130,9 +135,9 @@ export default function ApplyPage() {
         })
       );
       router.push('/apply/success');
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error:', err);
-      setError(err.message || '신청에 실패했습니다.');
+      setError(err instanceof Error ? err.message : '신청에 실패했습니다.');
     } finally {
       setConfirmDialog({ open: false });
     }

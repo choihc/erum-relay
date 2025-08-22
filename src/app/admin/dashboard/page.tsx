@@ -115,13 +115,23 @@ export default function AdminDashboard() {
       }
 
       const registrations =
-        data?.map((reg: any) => ({
-          id: reg.id,
-          name: reg.user.name,
-          parish: reg.user.parish,
-          phone_last_4: reg.user.phone_last_4,
-          created_at: reg.created_at,
-        })) || [];
+        data?.map(
+          (reg: {
+            id: string;
+            created_at: string;
+            user: {
+              name: string;
+              parish: string;
+              phone_last_4: string;
+            }[];
+          }) => ({
+            id: reg.id,
+            name: reg.user[0]?.name || '',
+            parish: reg.user[0]?.parish || '',
+            phone_last_4: reg.user[0]?.phone_last_4 || '',
+            created_at: reg.created_at,
+          })
+        ) || [];
 
       setDetailDialog({
         open: true,

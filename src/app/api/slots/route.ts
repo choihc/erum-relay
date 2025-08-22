@@ -23,14 +23,14 @@ export async function GET(request: NextRequest) {
     }
 
     // 해당 날짜의 시간대 정보 조회
-    let { data: slots, error } = await supabase
+    const { data: initialSlots, error: initialError } = await supabase
       .from('slot_status')
       .select('*')
       .eq('date', date)
       .order('start_time');
 
-    if (error) {
-      console.error('Slots fetch error:', error);
+    if (initialError) {
+      console.error('Slots fetch error:', initialError);
       return NextResponse.json(
         { error: '시간대 정보를 불러오는데 실패했습니다.' },
         { status: 500 }
@@ -38,6 +38,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 시간대가 없으면 자동으로 생성 (평일만)
+    let slots = initialSlots;
     if (!slots || slots.length === 0) {
       const targetDate = new Date(date + 'T00:00:00');
       const dayOfWeek = targetDate.getDay();

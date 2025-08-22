@@ -42,10 +42,15 @@ export async function POST(request: NextRequest) {
     }
 
     // 과거 시간대인지 확인
-    const { prayer_slot } = registration as any;
-    if (prayer_slot) {
+    const { prayer_slot } = registration as {
+      prayer_slot: {
+        date: string;
+        start_time: string;
+      }[];
+    };
+    if (prayer_slot && prayer_slot[0]) {
       const slotDateTime = new Date(
-        `${prayer_slot.date}T${prayer_slot.start_time}`
+        `${prayer_slot[0].date}T${prayer_slot[0].start_time}`
       );
       const now = new Date();
 

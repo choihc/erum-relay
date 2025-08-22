@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -28,7 +28,12 @@ interface UserRegistration {
 
 export default function MyRegistrationsPage() {
   const router = useRouter();
-  const [userInfo, setUserInfo] = useState<any>(null);
+  const [userInfo, setUserInfo] = useState<{
+    name: string;
+    parish: string;
+    phone_last_4: string;
+    userId?: string;
+  } | null>(null);
   const [registrations, setRegistrations] = useState<UserRegistration[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -37,59 +42,7 @@ export default function MyRegistrationsPage() {
     registration?: UserRegistration;
   }>({ open: false });
 
-  useEffect(() => {
-    // localStorage에서 사용자 정보 가져오기
-    const savedUserInfo = localStorage.getItem('userInfo');
-    if (!savedUserInfo) {
-      router.push('/register');
-      return;
-    }
-    const userInfo = JSON.parse(savedUserInfo);
-    setUserInfo(userInfo);
-
-    if (userInfo.userId) {
-      fetchRegistrations(userInfo.userId);
-    } else {
-      // userId가 없는 경우 서버에서 조회
-      findUserAndFetchRegistrations(userInfo);
-    }
-  }, [router]);
-
-  const findUserAndFetchRegistrations = async (userInfo: any) => {
-    setIsLoading(true);
-    try {
-      const { data: users, error: userError } = await supabase
-        .from('users')
-        .select('id')
-        .eq('name', userInfo.name)
-        .eq('parish', userInfo.parish)
-        .eq('phone_last_4', userInfo.phone_last_4)
-        .limit(1);
-
-      if (userError) {
-        throw userError;
-      }
-
-      if (users && users.length > 0) {
-        const userId = users[0].id;
-        setUserInfo((prev: any) => ({ ...prev, userId }));
-        localStorage.setItem(
-          'userInfo',
-          JSON.stringify({ ...userInfo, userId })
-        );
-        await fetchRegistrations(userId);
-      } else {
-        setError('사용자 정보를 찾을 수 없습니다.');
-      }
-    } catch (err) {
-      console.error('Error finding user:', err);
-      setError('사용자 정보 조회 중 오류가 발생했습니다.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const fetchRegistrations = async (userId: string) => {
+  const fetchRegistrations = useCallback(async (userId: string) => {
     setIsLoading(true);
     setError('');
 
@@ -112,7 +65,66 @@ export default function MyRegistrationsPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  const findUserAndFetchRegistrations = useCallback(
+    async (userInfo: {
+      name: string;
+      parish: string;
+      phone_last_4: string;
+    }) => {
+      setIsLoading(true);
+      try {
+        const { data: users, error: userError } = await supabase
+          .from('users')
+          .select('id')
+          .eq('name', userInfo.name)
+          .eq('parish', userInfo.parish)
+          .eq('phone_last_4', userInfo.phone_last_4)
+          .limit(1);
+
+        if (userError) {
+          throw userError;
+        }
+
+        if (users && users.length > 0) {
+          const userId = users[0].id;
+          setUserInfo((prev) => (prev ? { ...prev, userId } : null));
+          localStorage.setItem(
+            'userInfo',
+            JSON.stringify({ ...userInfo, userId })
+          );
+          await fetchRegistrations(userId);
+        } else {
+          setError('사용자 정보를 찾을 수 없습니다.');
+        }
+      } catch (err) {
+        console.error('Error finding user:', err);
+        setError('사용자 정보 조회 중 오류가 발생했습니다.');
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [fetchRegistrations]
+  );
+
+  useEffect(() => {
+    // localStorage에서 사용자 정보 가져오기
+    const savedUserInfo = localStorage.getItem('userInfo');
+    if (!savedUserInfo) {
+      router.push('/register');
+      return;
+    }
+    const userInfo = JSON.parse(savedUserInfo);
+    setUserInfo(userInfo);
+
+    if (userInfo.userId) {
+      fetchRegistrations(userInfo.userId);
+    } else {
+      // userId가 없는 경우 서버에서 조회
+      findUserAndFetchRegistrations(userInfo);
+    }
+  }, [router, findUserAndFetchRegistrations, fetchRegistrations]);
 
   const handleCancel = async (registration: UserRegistration) => {
     if (!userInfo?.userId) return;
@@ -151,9 +163,9 @@ export default function MyRegistrationsPage() {
           endTime: registration.end_time,
         })
       );
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error:', err);
-      setError(err.message || '취소에 실패했습니다.');
+      setError(err instanceof Error ? err.message : '취소에 실패했습니다.');
     }
   };
 
