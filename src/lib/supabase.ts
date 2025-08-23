@@ -36,7 +36,7 @@ export interface PrayerSlot {
   date: string; // YYYY-MM-DD
   start_time: string; // HH:mm
   end_time: string; // HH:mm
-  max_participants: number;
+  max_participants?: number; // 옵셔널로 변경 (무제한)
   created_at: string;
 }
 

@@ -12,15 +12,10 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { ModalSheetSelect } from '@/components/ui/modal-sheet-select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ButtonLoading } from '@/components/ui/loading';
+import { Home } from 'lucide-react';
 import { PARISHES } from '@/lib/supabase';
 import { supabase } from '@/lib/supabase';
 
@@ -36,7 +31,6 @@ export default function RegisterPage() {
 
   const handleSubmit = async (action: 'apply' | 'check') => {
     setError('');
-    setIsLoading(true);
 
     // 입력값 검증
     if (
@@ -45,7 +39,6 @@ export default function RegisterPage() {
       !formData.phone_last_4.trim()
     ) {
       setError('모든 항목을 입력해주세요.');
-      setIsLoading(false);
       return;
     }
 
@@ -54,7 +47,6 @@ export default function RegisterPage() {
       !/^\d{4}$/.test(formData.phone_last_4)
     ) {
       setError('휴대전화 뒷 4자리는 숫자 4자리여야 합니다.');
-      setIsLoading(false);
       return;
     }
 
@@ -94,18 +86,23 @@ export default function RegisterPage() {
     } catch (err) {
       console.error('Error:', err);
       setError('오류가 발생했습니다. 다시 시도해주세요.');
-    } finally {
-      setIsLoading(false);
     }
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 min-h-screen flex items-center justify-center">
+    <div className="container mx-auto px-4 py-8 min-h-screen flex items-center justify-center relative">
+      {/* Floating Home Button */}
+      <Link href="/" className="absolute top-4 left-4 z-10">
+        <Button variant="outline" size="sm" className="h-8 w-8 p-0 shadow-md">
+          <Home className="h-4 w-4" />
+        </Button>
+      </Link>
+
       <div className="w-full max-w-md space-y-6">
         <Card>
           <CardHeader>
             <CardTitle className="text-center text-primary text-2xl font-bold">
-              신원 입력
+              정보 입력
             </CardTitle>
             <CardDescription className="text-center">
               신청을 위해 정보를 입력해주세요
@@ -128,6 +125,7 @@ export default function RegisterPage() {
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, name: e.target.value }))
                 }
+                className="h-12 bg-background"
               />
             </div>
 
@@ -135,23 +133,15 @@ export default function RegisterPage() {
               <label className="text-lg font-semibold text-primary block mb-2">
                 교구
               </label>
-              <Select
+              <ModalSheetSelect
+                options={PARISHES}
                 value={formData.parish}
-                onValueChange={(value) =>
+                onSelect={(value) =>
                   setFormData((prev) => ({ ...prev, parish: value }))
                 }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="교구를 선택하세요" />
-                </SelectTrigger>
-                <SelectContent>
-                  {PARISHES.map((parish) => (
-                    <SelectItem key={parish} value={parish}>
-                      {parish}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                placeholder="교구를 선택하세요"
+                label="교구 선택"
+              />
             </div>
 
             <div className="space-y-3">
@@ -168,6 +158,7 @@ export default function RegisterPage() {
                     phone_last_4: e.target.value,
                   }))
                 }
+                className="h-12 bg-background"
               />
             </div>
 

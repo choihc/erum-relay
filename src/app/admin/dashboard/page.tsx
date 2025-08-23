@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { DayPicker } from 'react-day-picker';
 import {
@@ -14,6 +15,7 @@ import {
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Loading } from '@/components/ui/loading';
+import { Home } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 interface SlotStatus {
@@ -21,9 +23,9 @@ interface SlotStatus {
   date: string;
   start_time: string;
   end_time: string;
-  max_participants: number;
+  max_participants?: number; // 옵셔널로 변경
   current_participants: number;
-  available_spots: number;
+  available_spots?: number; // 옵셔널로 변경
 }
 
 interface Registration {
@@ -34,6 +36,13 @@ interface Registration {
   created_at: string;
 }
 
+interface AdminStats {
+  totalRegistrations: number;
+  totalUsers: number;
+  todayRegistrations: number;
+  parishStats: Record<string, number>;
+}
+
 export default function AdminDashboard() {
   const router = useRouter();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
@@ -42,6 +51,8 @@ export default function AdminDashboard() {
   const [slots, setSlots] = useState<SlotStatus[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [stats, setStats] = useState<AdminStats | null>(null);
+  const [statsLoading, setStatsLoading] = useState(false);
   const [detailDialog, setDetailDialog] = useState<{
     open: boolean;
     slot?: SlotStatus;
@@ -62,6 +73,9 @@ export default function AdminDashboard() {
     if (selectedDate) {
       fetchSlots(selectedDate);
     }
+
+    // 통계 데이터 가져오기
+    fetchStats();
   }, [selectedDate]);
 
   // 다이얼로그 닫힐 때 스크롤 위치 복원
@@ -74,6 +88,20 @@ export default function AdminDashboard() {
       return () => clearTimeout(timer);
     }
   }, [detailDialog.open, scrollPosition]);
+
+  const fetchStats = async () => {
+    try {
+      const response = await fetch('/api/admin/stats');
+      if (!response.ok) {
+        throw new Error('통계 정보를 불러오는데 실패했습니다.');
+      }
+
+      const data = await response.json();
+      setStats(data);
+    } catch (err) {
+      console.error('Error fetching stats:', err);
+    }
+  };
 
   const fetchSlots = async (date: Date) => {
     setIsLoading(true);
@@ -108,8 +136,6 @@ export default function AdminDashboard() {
   };
 
   const fetchSlotDetails = async (slot: SlotStatus) => {
-    setIsLoading(true);
-
     // 현재 스크롤 위치 저장
     setScrollPosition(window.pageYOffset || document.documentElement.scrollTop);
 
@@ -142,14 +168,7 @@ export default function AdminDashboard() {
     } catch (err) {
       console.error('Error fetching slot details:', err);
       setError('상세 정보를 불러오는데 실패했습니다.');
-    } finally {
-      setIsLoading(false);
     }
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('adminToken');
-    router.push('/admin');
   };
 
   const formatDate = (dateStr: string) => {
@@ -168,17 +187,19 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
+    <div className="container mx-auto px-4 py-8 max-w-4xl relative">
+      {/* Floating Home Button */}
+      <Link href="/" className="absolute top-4 left-4 z-10">
+        <Button variant="outline" size="sm" className="h-8 w-8 p-0 shadow-md">
+          <Home className="h-4 w-4" />
+        </Button>
+      </Link>
+
       {/* 헤더 */}
       <div className="text-center mb-8">
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-primary">관리자 대시보드</h1>
-          <Button variant="outline" onClick={handleLogout}>
-            로그아웃
-          </Button>
-        </div>
+        <h1 className="text-3xl font-bold text-primary">관리자 대시보드</h1>
         <p className="text-lg text-muted-foreground mt-2">
-          기도 시간 신청 현황을 확인하세요
+          기도 시간 신청 현황을 확인하세요.
         </p>
       </div>
 
@@ -187,6 +208,20 @@ export default function AdminDashboard() {
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
+
+      {/* 총 신청 건수 */}
+      <div className="mb-8 text-center">
+        {stats ? (
+          <div className="bg-card p-6 rounded-lg border inline-block">
+            <h3 className="text-lg font-medium text-muted-foreground mb-2">
+              현재 총 신청 건수
+            </h3>
+            <p className="text-4xl font-bold text-primary">
+              {stats.totalRegistrations}건
+            </p>
+          </div>
+        ) : null}
+      </div>
 
       {/* 캘린더 섹션 */}
       <div className="mb-8">
@@ -260,24 +295,21 @@ export default function AdminDashboard() {
             현황
           </h2>
 
-          {isLoading ? (
-            <Loading />
-          ) : slots.length === 0 ? (
+          {slots.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               해당 날짜에 이용 가능한 시간대가 없습니다.
             </div>
           ) : (
-            <div className="space-y-3 max-w-2xl mx-auto">
+            <div className="space-y-3 max-w-4xl mx-auto">
               {slots.map((slot) => (
                 <div
                   key={slot.id}
-                  className="flex items-center justify-between p-4 border rounded-lg bg-background hover:bg-accent/50 transition-colors"
+                  className="flex items-center p-4 border rounded-lg bg-background hover:bg-accent/50 transition-colors"
                 >
-                  <div className="flex items-center space-x-4">
-                    <span className="font-medium text-lg">
-                      {formatTime(slot.start_time)} ~{' '}
-                      {formatTime(slot.end_time)}
-                    </span>
+                  <div className="font-medium text-lg w-35 flex-shrink-0">
+                    {formatTime(slot.start_time)} ~ {formatTime(slot.end_time)}
+                  </div>
+                  <div className="flex-1 flex justify-center pr-2">
                     <Badge
                       variant={
                         slot.current_participants === 0
@@ -285,20 +317,19 @@ export default function AdminDashboard() {
                           : 'default'
                       }
                     >
-                      {slot.current_participants}/{slot.max_participants}명
+                      신청인원 {slot.current_participants}명
                     </Badge>
-                    {slot.available_spots === 0 && (
-                      <Badge variant="destructive">마감</Badge>
-                    )}
                   </div>
-                  <Button
-                    variant="outline"
-                    className="h-10 px-6"
-                    onClick={() => fetchSlotDetails(slot)}
-                    disabled={isLoading}
-                  >
-                    현황 확인
-                  </Button>
+                  <div className="w-32 flex justify-end">
+                    <Button
+                      variant="outline"
+                      className="h-10 px-6"
+                      onClick={() => fetchSlotDetails(slot)}
+                      disabled={isLoading}
+                    >
+                      현황 확인
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>

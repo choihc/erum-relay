@@ -15,6 +15,7 @@ import {
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Loading } from '@/components/ui/loading';
+import { Home } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 interface UserRegistration {
@@ -43,7 +44,6 @@ export default function MyRegistrationsPage() {
   }>({ open: false });
 
   const fetchRegistrations = useCallback(async (userId: string) => {
-    setIsLoading(true);
     setError('');
 
     try {
@@ -62,8 +62,6 @@ export default function MyRegistrationsPage() {
     } catch (err) {
       console.error('Error fetching registrations:', err);
       setError('신청 내역을 불러오는데 실패했습니다.');
-    } finally {
-      setIsLoading(false);
     }
   }, []);
 
@@ -73,7 +71,6 @@ export default function MyRegistrationsPage() {
       parish: string;
       phone_last_4: string;
     }) => {
-      setIsLoading(true);
       try {
         const { data: users, error: userError } = await supabase
           .from('users')
@@ -101,8 +98,6 @@ export default function MyRegistrationsPage() {
       } catch (err) {
         console.error('Error finding user:', err);
         setError('사용자 정보 조회 중 오류가 발생했습니다.');
-      } finally {
-        setIsLoading(false);
       }
     },
     [fetchRegistrations]
@@ -183,7 +178,14 @@ export default function MyRegistrationsPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
+    <div className="container mx-auto px-4 py-8 max-w-4xl relative">
+      {/* Floating Home Button */}
+      <Link href="/" className="absolute top-4 left-4 z-10">
+        <Button variant="outline" size="sm" className="h-8 w-8 p-0 shadow-md">
+          <Home className="h-4 w-4" />
+        </Button>
+      </Link>
+
       {/* 헤더 */}
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold text-primary mb-2">나의 신청 내역</h1>

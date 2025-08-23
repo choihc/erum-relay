@@ -24,7 +24,6 @@ export default function AdminPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    setIsLoading(true);
 
     if (!adminCode.trim()) {
       setError('관리자 코드를 입력해주세요.');
@@ -53,8 +52,6 @@ export default function AdminPage() {
     } catch (err) {
       console.error('Admin verification error:', err);
       setError('서버 오류가 발생했습니다.');
-    } finally {
-      setIsLoading(false);
     }
   };
 

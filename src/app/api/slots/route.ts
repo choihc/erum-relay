@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
             date,
             start_time: startTime,
             end_time: endTime,
-            max_participants: 10,
+            max_participants: 999999, // 무제한으로 설정
           });
         }
 

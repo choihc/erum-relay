@@ -18,15 +18,16 @@ import {
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Loading } from '@/components/ui/loading';
+import { Home } from 'lucide-react';
 
 interface SlotStatus {
   id: string;
   date: string;
   start_time: string;
   end_time: string;
-  max_participants: number;
+  max_participants?: number; // 옵셔널로 변경
   current_participants: number;
-  available_spots: number;
+  available_spots?: number; // 옵셔널로 변경
 }
 
 export default function ApplyPage() {
@@ -65,7 +66,6 @@ export default function ApplyPage() {
   }, [selectedDate]);
 
   const fetchSlots = async (date: Date) => {
-    setIsLoading(true);
     setError('');
 
     try {
@@ -96,8 +96,6 @@ export default function ApplyPage() {
           ? err.message
           : '시간대 정보를 불러오는데 실패했습니다.'
       );
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -163,7 +161,14 @@ export default function ApplyPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
+    <div className="container mx-auto px-4 py-8 max-w-4xl relative">
+      {/* Floating Home Button */}
+      <Link href="/" className="absolute top-4 left-4 z-10">
+        <Button variant="outline" size="sm" className="h-8 w-8 p-0 shadow-md">
+          <Home className="h-4 w-4" />
+        </Button>
+      </Link>
+
       {/* 헤더 */}
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold text-primary mb-2">기도 시간 신청</h1>
@@ -260,28 +265,29 @@ export default function ApplyPage() {
               해당 날짜에 이용 가능한 시간대가 없습니다.
             </div>
           ) : (
-            <div className="space-y-3 max-w-2xl mx-auto">
+            <div className="space-y-3 max-w-4xl mx-auto">
               {slots.map((slot) => (
                 <div
                   key={slot.id}
-                  className="flex items-center justify-between p-4 border rounded-lg bg-background hover:bg-accent/50 transition-colors"
+                  className="flex items-center p-4 border rounded-lg bg-background hover:bg-accent/50 transition-colors"
                 >
-                  <div className="flex items-center space-x-4">
-                    <span className="font-medium text-lg">
-                      {formatTime(slot.start_time)} ~{' '}
-                      {formatTime(slot.end_time)}
-                    </span>
+                  <div className="font-medium text-lg w-35 flex-shrink-0">
+                    {formatTime(slot.start_time)} ~ {formatTime(slot.end_time)}
+                  </div>
+                  <div className="flex-1 flex justify-center pr-2">
                     <Badge variant="secondary">
                       신청인원 {slot.current_participants}명
                     </Badge>
                   </div>
-                  <Button
-                    className="h-10 px-6"
-                    disabled={slot.available_spots === 0 || isLoading}
-                    onClick={() => setConfirmDialog({ open: true, slot })}
-                  >
-                    {slot.available_spots === 0 ? '마감' : '신청하기'}
-                  </Button>
+                  <div className="w-32 flex justify-end">
+                    <Button
+                      className="h-10 px-6"
+                      disabled={isLoading}
+                      onClick={() => setConfirmDialog({ open: true, slot })}
+                    >
+                      신청하기
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>

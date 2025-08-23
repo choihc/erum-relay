@@ -118,12 +118,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (slotStatus.available_spots <= 0) {
-      return NextResponse.json(
-        { error: '해당 시간대는 마감되었습니다.' },
-        { status: 400 }
-      );
-    }
+    // 최대 인원 제한 없음 - available_spots 체크 제거
 
     // 신청 등록
     const { data: registration, error: registrationError } = await supabaseAdmin
