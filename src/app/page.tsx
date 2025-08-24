@@ -9,13 +9,19 @@ export default function Home() {
         <Card className="text-center">
           <CardHeader>
             <CardTitle className="text-2xl font-bold text-primary">
-              🍂 9월 가을 릴레이 기도 🍂
+              『가을, 기도로 수놓다』
+              <br />
+              릴레이 성전중보기도
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="text-sm text-muted-foreground space-y-2">
-              <p>• 평일 오전 7시 ~ 오후 7시</p>
-              <p>• 1시간씩 릴레이로 기도</p>
+              <p>
+                • 일시: 9/1~9/26(매주 월~금)
+                <br />
+                오전 7시~오후 7시
+              </p>
+              <p>• 장소: 중예배실(브릿지성전 2층)</p>
             </div>
 
             <div className="space-y-3">

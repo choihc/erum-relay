@@ -60,7 +60,8 @@ export const PARISHES = [
   '7 교구',
   '8 교구',
   '9 교구',
-  '남성셀',
+  '다음세대',
+  '기타',
 ] as const;
 
 export type Parish = (typeof PARISHES)[number];
