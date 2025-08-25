@@ -9,7 +9,7 @@ export default function Home() {
         <Card className="text-center">
           <CardHeader>
             <CardTitle className="text-2xl font-bold text-primary">
-              『가을, 기도로 수놓다』
+              🍂 가을, 기도로 수놓다 🍂
               <br />
               릴레이 성전중보기도
             </CardTitle>
