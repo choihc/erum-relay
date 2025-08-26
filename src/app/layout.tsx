@@ -13,8 +13,26 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: '9월 가을 릴레이 기도',
-  description: '9월 가을 릴레이 기도 신청 시스템',
+  title: '가을, 기도로 수놓다',
+  description: '릴레이 성전중보기도',
+  openGraph: {
+    title: '가을, 기도로 수놓다',
+    description: '릴레이 성전중보기도',
+    images: [
+      {
+        url: '/ogtag_image.png',
+        width: 1200,
+        height: 630,
+        alt: '가을, 기도로 수놓다',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: '가을, 기도로 수놓다',
+    description: '릴레이 성전중보기도',
+    images: ['/ogtag_image.png'],
+  },
 };
 
 export default function RootLayout({
