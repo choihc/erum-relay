@@ -119,26 +119,20 @@
   }
 
   html {
-    /* 모바일에서 주소창 높이 변화 방지 */
-    height: 100%;
+    /* 가로 스크롤만 방지 */
     overflow-x: hidden;
   }
 
   body {
     @apply bg-background text-foreground;
-    /* 모바일 스크롤 최적화 */
-    height: 100%;
+    /* 가로 스크롤 방지 및 터치 스크롤 최적화 */
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
-    /* iOS Safari 바운스 스크롤 방지 */
-    overscroll-behavior: none;
   }
 
-  /* 모바일 뷰포트 높이 최적화 */
-  @supports (height: 100dvh) {
-    html,
-    body {
-      height: 100dvh;
-    }
+  /* 모바일에서 요소가 화면을 벗어나지 않도록 */
+  * {
+    max-width: 100vw;
+    box-sizing: border-box;
   }
 }
