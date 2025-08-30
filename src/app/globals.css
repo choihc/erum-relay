@@ -117,7 +117,28 @@
   * {
     @apply border-border outline-ring/50;
   }
+
+  html {
+    /* 모바일에서 주소창 높이 변화 방지 */
+    height: 100%;
+    overflow-x: hidden;
+  }
+
   body {
     @apply bg-background text-foreground;
+    /* 모바일 스크롤 최적화 */
+    height: 100%;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    /* iOS Safari 바운스 스크롤 방지 */
+    overscroll-behavior: none;
+  }
+
+  /* 모바일 뷰포트 높이 최적화 */
+  @supports (height: 100dvh) {
+    html,
+    body {
+      height: 100dvh;
+    }
   }
 }
