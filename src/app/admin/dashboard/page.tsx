@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { Loading } from '@/components/ui/loading';
+import { ListSkeleton } from '@/components/ui/loading';
 import { Home } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
@@ -46,13 +46,12 @@ interface AdminStats {
 export default function AdminDashboard() {
   const router = useRouter();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
-    new Date()
+    new Date(2025, 8, 8) // 2025년 9월 9일 (첫 번째 선택 가능한 월요일)
   );
   const [slots, setSlots] = useState<SlotStatus[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [stats, setStats] = useState<AdminStats | null>(null);
-  const [statsLoading, setStatsLoading] = useState(false);
   const [detailDialog, setDetailDialog] = useState<{
     open: boolean;
     slot?: SlotStatus;
@@ -68,15 +67,6 @@ export default function AdminDashboard() {
       return;
     }
   }, [router]);
-
-  useEffect(() => {
-    if (selectedDate) {
-      fetchSlots(selectedDate);
-    }
-
-    // 통계 데이터 가져오기
-    fetchStats();
-  }, [selectedDate]);
 
   // 다이얼로그 닫힐 때 스크롤 위치 복원
   useEffect(() => {
@@ -103,7 +93,7 @@ export default function AdminDashboard() {
     }
   };
 
-  const fetchSlots = async (date: Date) => {
+  const fetchSlots = useCallback(async (date: Date) => {
     setIsLoading(true);
     setError('');
 
@@ -133,7 +123,7 @@ export default function AdminDashboard() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   const fetchSlotDetails = async (slot: SlotStatus) => {
     // 현재 스크롤 위치 저장
@@ -171,6 +161,15 @@ export default function AdminDashboard() {
     }
   };
 
+  useEffect(() => {
+    if (selectedDate) {
+      fetchSlots(selectedDate);
+    }
+
+    // 통계 데이터 가져오기
+    fetchStats();
+  }, [selectedDate, fetchSlots]);
+
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr + 'T00:00:00'); // 시간대 이슈 방지
     return `${date.getMonth() + 1}월 ${date.getDate()}일`;
@@ -180,10 +179,20 @@ export default function AdminDashboard() {
     return timeStr.substring(0, 5);
   };
 
-  // 평일만 선택 가능하도록 필터링
-  const isWeekday = (date: Date) => {
+  // 9월 8일~22일 평일만 선택 가능하도록 필터링
+  const isSelectableDate = (date: Date) => {
     const day = date.getDay();
-    return day >= 1 && day <= 5; // 월요일(1) ~ 금요일(5)
+    const isWeekday = day >= 1 && day <= 5; // 월요일(1) ~ 금요일(5)
+
+    // 9월 8일~22일 범위 체크
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const dateNum = date.getDate();
+
+    const isInRange =
+      year === 2025 && month === 8 && dateNum >= 8 && dateNum <= 22; // 9월은 0-based로 8
+
+    return isWeekday && isInRange;
   };
 
   return (
@@ -211,16 +220,14 @@ export default function AdminDashboard() {
 
       {/* 총 신청 건수 */}
       <div className="mb-8 text-center">
-        {stats ? (
-          <div className="bg-card p-6 rounded-lg border inline-block">
-            <h3 className="text-lg font-medium text-muted-foreground mb-2">
-              현재 총 신청 건수
-            </h3>
-            <p className="text-4xl font-bold text-primary">
-              {stats.totalRegistrations}건
-            </p>
-          </div>
-        ) : null}
+        <div className="bg-card p-6 rounded-lg border inline-block">
+          <h3 className="text-lg font-medium text-muted-foreground mb-2">
+            현재 총 신청 건수
+          </h3>
+          <p className="text-4xl font-bold text-primary">
+            {stats ? `${stats.totalRegistrations}` : ''}건
+          </p>
+        </div>
       </div>
 
       {/* 캘린더 섹션 */}
@@ -230,7 +237,7 @@ export default function AdminDashboard() {
             mode="single"
             selected={selectedDate}
             onSelect={setSelectedDate}
-            disabled={(date) => !isWeekday(date)}
+            disabled={(date) => !isSelectableDate(date)}
             startMonth={new Date(2025, 8)} // 2025년 9월 (0-based)
             endMonth={new Date(2025, 8)} // 2025년 9월만
             defaultMonth={new Date(2025, 8)} // 기본으로 9월 표시
@@ -243,7 +250,7 @@ export default function AdminDashboard() {
             modifiersClassNames={{
               selected: 'bg-orange-600 text-white !font-bold  shadow-xl',
             }}
-            className="rounded-md border p-6 bg-background shadow-sm"
+            className="rounded-md border p-6 bg-background shadow-sm [&_.rdp-disabled]:!text-gray-400 [&_.rdp-disabled]:!bg-gray-100 [&_.rdp-disabled]:opacity-50 [&_.rdp-disabled]:cursor-not-allowed [&_.rdp-day_button]:w-full [&_.rdp-day_button]:h-full [&_.rdp-day_button]:p-3 [&_.rdp-day_button]:min-h-[48px]"
             classNames={{
               months:
                 'flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0',
@@ -262,8 +269,7 @@ export default function AdminDashboard() {
                 'bg-primary text-primary-foreground hover:bg-primary focus:bg-primary',
               day_today: 'bg-accent text-accent-foreground font-semibold',
               day_outside: 'hidden',
-              day_disabled:
-                'text-muted-foreground opacity-30 cursor-not-allowed hover:bg-transparent',
+
               day_range_middle:
                 'aria-selected:bg-accent aria-selected:text-accent-foreground',
               day_hidden: 'invisible',
@@ -278,7 +284,7 @@ export default function AdminDashboard() {
               MonthCaption: () => (
                 <div className="flex justify-center items-center py-2">
                   <h3 className="text-lg font-semibold text-primary">
-                    2025년 9월 가을 릴레이 기도
+                    7 to 7 성전 중보기도
                   </h3>
                 </div>
               ),
@@ -295,10 +301,8 @@ export default function AdminDashboard() {
             현황
           </h2>
 
-          {slots.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              해당 날짜에 이용 가능한 시간대가 없습니다.
-            </div>
+          {isLoading ? (
+            <ListSkeleton />
           ) : (
             <div className="space-y-3 max-w-4xl mx-auto">
               {slots.map((slot) => (
@@ -314,10 +318,12 @@ export default function AdminDashboard() {
                       variant={
                         slot.current_participants === 0
                           ? 'secondary'
+                          : slot.current_participants >= 3
+                          ? 'destructive'
                           : 'default'
                       }
                     >
-                      신청인원 {slot.current_participants}명
+                      신청인원 {slot.current_participants}/3명
                     </Badge>
                   </div>
                   <div className="w-32 flex justify-end">
@@ -327,7 +333,7 @@ export default function AdminDashboard() {
                       onClick={() => fetchSlotDetails(slot)}
                       disabled={isLoading}
                     >
-                      현황 확인
+                      확인
                     </Button>
                   </div>
                 </div>

@@ -10,14 +10,13 @@ export default function Home() {
           <CardHeader>
             <CardTitle className="text-2xl font-bold text-primary">
               🍂 가을, 기도로 수놓다 🍂
-              <br />
-              릴레이 성전중보기도
+              <br />7 to 7 성전 중보기도
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="text-sm text-muted-foreground space-y-2">
               <p>
-                • 일시: 9/1~9/26(매주 월~금)
+                • 일시: 9/8~9/22
                 <br />
                 오전 7시~오후 7시
               </p>

@@ -124,3 +124,67 @@ export function ButtonLoading() {
     </div>
   );
 }
+
+// 리스트 스켈레톤 로딩 컴포넌트
+export function ListSkeleton({
+  count = 3,
+  className = '',
+}: {
+  count?: number;
+  className?: string;
+}) {
+  return (
+    <div className={`space-y-3 ${className}`}>
+      {Array.from({ length: count }).map((_, index) => (
+        <div
+          key={index}
+          className="flex items-center p-4 border rounded-lg bg-background animate-pulse"
+        >
+          {/* 시간 영역 스켈레톤 */}
+          <div className="w-35 flex-shrink-0">
+            <div className="h-5 bg-gray-200 rounded w-24"></div>
+          </div>
+
+          {/* 중앙 배지 영역 스켈레톤 */}
+          <div className="flex-1 flex justify-center pr-2">
+            <div className="h-6 bg-gray-200 rounded-full w-20"></div>
+          </div>
+
+          {/* 버튼 영역 스켈레톤 */}
+          <div className="w-32 flex justify-end">
+            <div className="h-10 bg-gray-200 rounded w-20"></div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// 시간대 선택 전용 스켈레톤
+export function TimeSlotSkeleton({ count = 12 }: { count?: number }) {
+  return (
+    <div className="space-y-3 max-w-4xl mx-auto">
+      {Array.from({ length: count }).map((_, index) => (
+        <div
+          key={index}
+          className="flex items-center p-4 border rounded-lg bg-background hover:bg-accent/50 transition-colors animate-pulse"
+        >
+          {/* 시간 표시 스켈레톤 */}
+          <div className="font-medium text-lg w-35 flex-shrink-0">
+            <div className="h-6 bg-gray-200 rounded w-28"></div>
+          </div>
+
+          {/* 신청인원 배지 스켈레톤 */}
+          <div className="flex-1 flex justify-center pr-2">
+            <div className="h-6 bg-gray-200 rounded-full w-24 px-3 py-1"></div>
+          </div>
+
+          {/* 신청하기 버튼 스켈레톤 */}
+          <div className="w-32 flex justify-end">
+            <div className="h-10 bg-gray-200 rounded w-20 px-6"></div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}

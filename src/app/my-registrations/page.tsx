@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { Loading } from '@/components/ui/loading';
+import { ListSkeleton, Loading } from '@/components/ui/loading';
 import { Home } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
@@ -44,6 +44,7 @@ export default function MyRegistrationsPage() {
   }>({ open: false });
 
   const fetchRegistrations = useCallback(async (userId: string) => {
+    setIsLoading(true);
     setError('');
 
     try {
@@ -62,6 +63,8 @@ export default function MyRegistrationsPage() {
     } catch (err) {
       console.error('Error fetching registrations:', err);
       setError('신청 내역을 불러오는데 실패했습니다.');
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
@@ -174,7 +177,7 @@ export default function MyRegistrationsPage() {
   };
 
   if (!userInfo) {
-    return <Loading size="lg" fullScreen />;
+    return null;
   }
 
   return (
@@ -203,7 +206,7 @@ export default function MyRegistrationsPage() {
       {/* 신청 내역 섹션 */}
       <div className="mb-8">
         {isLoading ? (
-          <Loading />
+          <ListSkeleton />
         ) : registrations.length === 0 ? (
           <div className="text-center py-8 space-y-4">
             <p className="text-muted-foreground">신청 내역이 없습니다.</p>
@@ -302,7 +305,7 @@ export default function MyRegistrationsPage() {
               }
               disabled={isLoading}
             >
-              {isLoading ? <Loading /> : '예, 취소합니다'}
+              예, 취소합니다
             </Button>
           </DialogFooter>
         </DialogContent>

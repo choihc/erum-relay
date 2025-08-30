@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ModalSheetSelect } from '@/components/ui/modal-sheet-select';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+
 import { ButtonLoading } from '@/components/ui/loading';
 import { Home } from 'lucide-react';
 import { PARISHES } from '@/lib/supabase';
@@ -27,18 +27,15 @@ export default function RegisterPage() {
     phone_last_4: '',
   });
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
 
   const handleSubmit = async (action: 'apply' | 'check') => {
-    setError('');
-
     // 입력값 검증
     if (
       !formData.name.trim() ||
       !formData.parish ||
       !formData.phone_last_4.trim()
     ) {
-      setError('모든 항목을 입력해주세요.');
+      alert('모든 항목을 입력해주세요.');
       return;
     }
 
@@ -46,7 +43,7 @@ export default function RegisterPage() {
       formData.phone_last_4.length !== 4 ||
       !/^\d{4}$/.test(formData.phone_last_4)
     ) {
-      setError('휴대전화 뒷 4자리는 숫자 4자리여야 합니다.');
+      alert('휴대전화 뒷 4자리는 숫자 4자리여야 합니다.');
       return;
     }
 
@@ -76,7 +73,7 @@ export default function RegisterPage() {
           );
           router.push('/my-registrations');
         } else {
-          setError('신청 내역이 없습니다.');
+          alert('신청 내역이 없습니다.');
         }
       } else {
         // 신청 페이지로 이동 (사용자 정보를 localStorage에 저장)
@@ -85,7 +82,7 @@ export default function RegisterPage() {
       }
     } catch (err) {
       console.error('Error:', err);
-      setError('오류가 발생했습니다. 다시 시도해주세요.');
+      alert('오류가 발생했습니다. 다시 시도해주세요.');
     }
   };
 
@@ -109,12 +106,6 @@ export default function RegisterPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-
             <div className="space-y-3">
               <label className="text-lg font-semibold text-primary block mb-2">
                 이름

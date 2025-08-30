@@ -13,7 +13,6 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loading } from '@/components/ui/loading';
 
 export default function AdminPage() {
   const router = useRouter();
@@ -94,7 +93,7 @@ export default function AdminPage() {
                   className="w-full h-12 text-lg"
                   disabled={isLoading}
                 >
-                  {isLoading ? <Loading /> : '로그인'}
+                  로그인
                 </Button>
               </div>
             </form>

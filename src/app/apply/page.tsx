@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { Loading } from '@/components/ui/loading';
+import { TimeSlotSkeleton } from '@/components/ui/loading';
 import { Home } from 'lucide-react';
 
 interface SlotStatus {
@@ -39,7 +39,7 @@ export default function ApplyPage() {
     userId?: string;
   } | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
-    new Date(2025, 8, 2) // 2025년 9월 2일 (첫 번째 월요일)
+    new Date(2025, 8, 8) // 2025년 9월 8일 (첫 번째 선택 가능한 월요일)
   );
   const [slots, setSlots] = useState<SlotStatus[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -66,6 +66,7 @@ export default function ApplyPage() {
   }, [selectedDate]);
 
   const fetchSlots = async (date: Date) => {
+    setIsLoading(true);
     setError('');
 
     try {
@@ -96,6 +97,8 @@ export default function ApplyPage() {
           ? err.message
           : '시간대 정보를 불러오는데 실패했습니다.'
       );
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -150,14 +153,24 @@ export default function ApplyPage() {
     return timeStr.substring(0, 5);
   };
 
-  // 평일만 선택 가능하도록 필터링
-  const isWeekday = (date: Date) => {
+  // 9월 8일~22일 평일만 선택 가능하도록 필터링
+  const isSelectableDate = (date: Date) => {
     const day = date.getDay();
-    return day >= 1 && day <= 5; // 월요일(1) ~ 금요일(5)
+    const isWeekday = day >= 1 && day <= 5; // 월요일(1) ~ 금요일(5)
+
+    // 9월 8일~22일 범위 체크
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const dateNum = date.getDate();
+
+    const isInRange =
+      year === 2025 && month === 8 && dateNum >= 8 && dateNum <= 22; // 9월은 0-based로 8
+
+    return isWeekday && isInRange;
   };
 
   if (!userInfo) {
-    return <Loading size="lg" fullScreen />;
+    return null;
   }
 
   return (
@@ -172,8 +185,14 @@ export default function ApplyPage() {
       {/* 헤더 */}
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold text-primary mb-2">기도 시간 신청</h1>
-        <p className="text-lg text-muted-foreground">
+        <p className="text-lg text-muted-foreground mb-2">
           원하시는 날짜와 시간을 선택해주세요
+        </p>
+        <p className="text-sm text-orange-600 font-medium mb-1">
+          ※ 각 시간대별 최대 3명까지 신청 가능합니다
+        </p>
+        <p className="text-sm text-muted-foreground">
+          신청 가능 기간: 9월 8일 ~ 22일
         </p>
       </div>
 
@@ -190,10 +209,9 @@ export default function ApplyPage() {
             mode="single"
             selected={selectedDate}
             onSelect={(date) => {
-              console.log('Selected date:', date); // 디버깅용
               setSelectedDate(date);
             }}
-            disabled={(date) => !isWeekday(date) || date < new Date()}
+            disabled={(date) => !isSelectableDate(date)}
             startMonth={new Date(2025, 8)} // 2025년 9월 (0-based)
             endMonth={new Date(2025, 8)} // 2025년 9월만
             defaultMonth={new Date(2025, 8)} // 기본으로 9월 표시
@@ -202,11 +220,16 @@ export default function ApplyPage() {
             numberOfMonths={1}
             modifiers={{
               selected: selectedDate || undefined,
+              available: (date) =>
+                isSelectableDate(date) &&
+                selectedDate?.toDateString() !== date.toDateString(),
             }}
             modifiersClassNames={{
-              selected: 'bg-orange-600 text-white !font-bold  shadow-xl',
+              selected: 'bg-orange-600 text-white !font-bold shadow-xl',
+              available:
+                'bg-orange-50 border-orange-200 text-orange-700 font-medium hover:bg-orange-100',
             }}
-            className="rounded-md border p-6 bg-background shadow-sm"
+            className="rounded-md border p-6 bg-background shadow-sm [&_.rdp-disabled]:!text-gray-400 [&_.rdp-disabled]:!bg-gray-100 [&_.rdp-disabled]:opacity-50 [&_.rdp-disabled]:cursor-not-allowed [&_.rdp-day_button]:w-full [&_.rdp-day_button]:h-full [&_.rdp-day_button]:p-3 [&_.rdp-day_button]:min-h-[48px]"
             classNames={{
               months:
                 'flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0',
@@ -225,8 +248,7 @@ export default function ApplyPage() {
                 'bg-primary text-primary-foreground hover:bg-primary focus:bg-primary',
               day_today: 'bg-accent text-accent-foreground font-semibold',
               day_outside: 'hidden',
-              day_disabled:
-                'text-muted-foreground opacity-30 cursor-not-allowed hover:bg-transparent',
+
               day_range_middle:
                 'aria-selected:bg-accent aria-selected:text-accent-foreground',
               day_hidden: 'invisible',
@@ -241,7 +263,7 @@ export default function ApplyPage() {
               MonthCaption: () => (
                 <div className="flex justify-center items-center py-2">
                   <h3 className="text-lg font-semibold text-primary">
-                    2025년 9월 가을 릴레이 기도
+                    7 to 7 성전 중보기도
                   </h3>
                 </div>
               ),
@@ -259,7 +281,7 @@ export default function ApplyPage() {
           </h2>
 
           {isLoading ? (
-            <Loading />
+            <TimeSlotSkeleton count={12} />
           ) : slots.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               해당 날짜에 이용 가능한 시간대가 없습니다.
@@ -276,16 +298,16 @@ export default function ApplyPage() {
                   </div>
                   <div className="flex-1 flex justify-center pr-2">
                     <Badge variant="secondary">
-                      신청인원 {slot.current_participants}명
+                      신청인원 {slot.current_participants}/3명
                     </Badge>
                   </div>
                   <div className="w-32 flex justify-end">
                     <Button
-                      className="h-10 px-6"
-                      disabled={isLoading}
+                      className="h-10 px-4"
+                      disabled={isLoading || slot.current_participants >= 3}
                       onClick={() => setConfirmDialog({ open: true, slot })}
                     >
-                      신청하기
+                      {slot.current_participants >= 3 ? '마감' : '신청하기'}
                     </Button>
                   </div>
                 </div>
@@ -340,7 +362,7 @@ export default function ApplyPage() {
               }
               disabled={isLoading}
             >
-              {isLoading ? <Loading /> : '확인'}
+              확인
             </Button>
           </DialogFooter>
         </DialogContent>

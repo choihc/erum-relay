@@ -14,10 +14,10 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: '가을, 기도로 수놓다',
-  description: '릴레이 성전중보기도',
+  description: '7 to 7 성전 중보기도',
   openGraph: {
     title: '가을, 기도로 수놓다',
-    description: '릴레이 성전중보기도',
+    description: '7 to 7 성전 중보기도',
     images: [
       {
         url: '/ogtag_image.png',
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: '가을, 기도로 수놓다',
-    description: '릴레이 성전중보기도',
+    description: '7 to 7 성전 중보기도',
     images: ['/ogtag_image.png'],
   },
 };

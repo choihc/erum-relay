@@ -15,7 +15,7 @@ CREATE TABLE prayer_slots (
   date DATE NOT NULL,
   start_time TIME NOT NULL,
   end_time TIME NOT NULL,
-  max_participants INTEGER DEFAULT 10 NOT NULL,
+  max_participants INTEGER DEFAULT 3 NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   UNIQUE(date, start_time, end_time)
 );
