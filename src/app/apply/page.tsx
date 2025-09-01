@@ -153,18 +153,18 @@ export default function ApplyPage() {
     return timeStr.substring(0, 5);
   };
 
-  // 9월 8일~22일 평일만 선택 가능하도록 필터링
+  // 9월 8일~26일 평일만 선택 가능하도록 필터링
   const isSelectableDate = (date: Date) => {
     const day = date.getDay();
     const isWeekday = day >= 1 && day <= 5; // 월요일(1) ~ 금요일(5)
 
-    // 9월 8일~22일 범위 체크
+    // 9월 8일~26일 범위 체크
     const year = date.getFullYear();
     const month = date.getMonth();
     const dateNum = date.getDate();
 
     const isInRange =
-      year === 2025 && month === 8 && dateNum >= 8 && dateNum <= 22; // 9월은 0-based로 8
+      year === 2025 && month === 8 && dateNum >= 8 && dateNum <= 26; // 9월은 0-based로 8
 
     return isWeekday && isInRange;
   };
@@ -192,7 +192,7 @@ export default function ApplyPage() {
           ※ 각 시간대별 최대 3명까지 신청 가능합니다
         </p>
         <p className="text-sm text-muted-foreground">
-          신청 가능 기간: 9월 8일 ~ 22일
+          신청 가능 기간: 9월 8일 ~ 26일 (매주 월~금)
         </p>
       </div>
 

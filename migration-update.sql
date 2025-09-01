@@ -9,21 +9,21 @@ UPDATE prayer_slots
 SET max_participants = 3 
 WHERE max_participants = 999999 OR max_participants = 10 OR max_participants > 100;
 
--- 3. 9월 8일~22일 범위 외의 데이터 삭제 (필요한 경우)
+-- 3. 9월 8일~26일 범위 외의 데이터 삭제 (필요한 경우)
 -- 주석 해제하여 사용하세요
 -- DELETE FROM registrations WHERE slot_id IN (
 --   SELECT id FROM prayer_slots 
---   WHERE date < '2025-09-08' OR date > '2025-09-22'
+--   WHERE date < '2025-09-08' OR date > '2025-09-26'
 -- );
 -- DELETE FROM prayer_slots 
--- WHERE date < '2025-09-08' OR date > '2025-09-22';
+-- WHERE date < '2025-09-08' OR date > '2025-09-26';
 
--- 4. 9월 8일~22일 평일 데이터가 없다면 생성
+-- 4. 9월 8일~26일 평일 데이터가 없다면 생성
 DO $$
 DECLARE
   loop_date DATE;
   start_date DATE := '2025-09-08'; -- 9월 8일부터
-  end_date DATE := '2025-09-22';   -- 9월 22일까지
+  end_date DATE := '2025-09-26';   -- 9월 26일까지
   current_hour INTEGER;
   slot_exists BOOLEAN;
 BEGIN

@@ -179,18 +179,18 @@ export default function AdminDashboard() {
     return timeStr.substring(0, 5);
   };
 
-  // 9월 8일~22일 평일만 선택 가능하도록 필터링
+  // 9월 8일~26일 평일만 선택 가능하도록 필터링
   const isSelectableDate = (date: Date) => {
     const day = date.getDay();
     const isWeekday = day >= 1 && day <= 5; // 월요일(1) ~ 금요일(5)
 
-    // 9월 8일~22일 범위 체크
+    // 9월 8일~26일 범위 체크
     const year = date.getFullYear();
     const month = date.getMonth();
     const dateNum = date.getDate();
 
     const isInRange =
-      year === 2025 && month === 8 && dateNum >= 8 && dateNum <= 22; // 9월은 0-based로 8
+      year === 2025 && month === 8 && dateNum >= 8 && dateNum <= 26; // 9월은 0-based로 8
 
     return isWeekday && isInRange;
   };

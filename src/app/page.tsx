@@ -16,7 +16,7 @@ export default function Home() {
           <CardContent className="space-y-4">
             <div className="text-sm text-muted-foreground space-y-2">
               <p>
-                • 일시: 9/8~9/22
+                • 일시: 9/8~9/26 (매주 월~금)
                 <br />
                 오전 7시~오후 7시
               </p>
