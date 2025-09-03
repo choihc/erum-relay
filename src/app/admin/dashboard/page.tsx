@@ -15,8 +15,13 @@ import {
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { ListSkeleton } from '@/components/ui/loading';
-import { Home } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Home, Edit3, Check, X, Settings } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import type {
+  GlobalSettingsResponse,
+  UpdateGlobalSettingsRequest,
+} from '@/types/admin';
 
 interface SlotStatus {
   id: string;
@@ -59,6 +64,12 @@ export default function AdminDashboard() {
   }>({ open: false });
   const [scrollPosition, setScrollPosition] = useState(0);
 
+  // 글로벌 설정 관련 state
+  const [globalMaxParticipants, setGlobalMaxParticipants] = useState<number>(3);
+  const [isEditingGlobal, setIsEditingGlobal] = useState(false);
+  const [globalEditValue, setGlobalEditValue] = useState<string>('3');
+  const [isGlobalLoading, setIsGlobalLoading] = useState(false);
+
   useEffect(() => {
     // 관리자 토큰 확인
     const adminToken = localStorage.getItem('adminToken');
@@ -91,6 +102,83 @@ export default function AdminDashboard() {
     } catch (err) {
       console.error('Error fetching stats:', err);
     }
+  };
+
+  // 글로벌 설정 조회
+  const fetchGlobalSettings = async () => {
+    try {
+      const response = await fetch('/api/admin/global-settings');
+      if (!response.ok) {
+        throw new Error('글로벌 설정을 불러오는데 실패했습니다.');
+      }
+
+      const data: GlobalSettingsResponse = await response.json();
+      setGlobalMaxParticipants(data.maxParticipants);
+      setGlobalEditValue(data.maxParticipants.toString());
+    } catch (err) {
+      console.error('Error fetching global settings:', err);
+      setError('글로벌 설정을 불러오는데 실패했습니다.');
+    }
+  };
+
+  // 글로벌 설정 편집 시작
+  const handleEditGlobalSettings = () => {
+    setIsEditingGlobal(true);
+    setGlobalEditValue(globalMaxParticipants.toString());
+  };
+
+  // 글로벌 설정 저장
+  const handleSaveGlobalSettings = async () => {
+    const newMaxParticipants = parseInt(globalEditValue);
+
+    if (isNaN(newMaxParticipants) || newMaxParticipants < 1) {
+      setError('유효한 숫자를 입력해주세요. (1 이상)');
+      return;
+    }
+
+    setIsGlobalLoading(true);
+    try {
+      const requestBody: UpdateGlobalSettingsRequest = {
+        maxParticipants: newMaxParticipants,
+      };
+
+      const response = await fetch('/api/admin/global-settings', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || '설정 수정에 실패했습니다.');
+      }
+
+      const result = await response.json();
+      setGlobalMaxParticipants(result.maxParticipants);
+      setIsEditingGlobal(false);
+      setError('');
+
+      // 슬롯 목록 새로고침
+      if (selectedDate) {
+        await fetchSlots(selectedDate);
+      }
+    } catch (err) {
+      console.error('Error updating global settings:', err);
+      setError(
+        err instanceof Error ? err.message : '설정 수정에 실패했습니다.'
+      );
+    } finally {
+      setIsGlobalLoading(false);
+    }
+  };
+
+  // 글로벌 설정 편집 취소
+  const handleCancelGlobalEdit = () => {
+    setIsEditingGlobal(false);
+    setGlobalEditValue(globalMaxParticipants.toString());
+    setError('');
   };
 
   const fetchSlots = useCallback(async (date: Date) => {
@@ -168,6 +256,9 @@ export default function AdminDashboard() {
 
     // 통계 데이터 가져오기
     fetchStats();
+
+    // 글로벌 설정 가져오기
+    fetchGlobalSettings();
   }, [selectedDate, fetchSlots]);
 
   const formatDate = (dateStr: string) => {
@@ -227,6 +318,85 @@ export default function AdminDashboard() {
           <p className="text-4xl font-bold text-primary">
             {stats ? `${stats.totalRegistrations}` : ''}건
           </p>
+        </div>
+      </div>
+
+      {/* 글로벌 설정 섹션 */}
+      <div className="mb-8">
+        <div className="max-w-md mx-auto">
+          <div className="bg-card p-6 rounded-lg border">
+            <div className="flex items-center gap-2 mb-4">
+              <Settings className="h-5 w-5 text-primary" />
+              <h3 className="text-lg font-semibold text-primary">
+                전체 최대 신청인원 설정
+              </h3>
+            </div>
+
+            {isEditingGlobal ? (
+              <div className="flex items-center gap-2">
+                <Input
+                  type="number"
+                  min="1"
+                  value={globalEditValue}
+                  onChange={(e) => setGlobalEditValue(e.target.value)}
+                  className="w-20 text-center"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleSaveGlobalSettings();
+                    } else if (e.key === 'Escape') {
+                      handleCancelGlobalEdit();
+                    }
+                  }}
+                  autoFocus
+                  disabled={isGlobalLoading}
+                />
+                <span className="text-muted-foreground">명</span>
+                <div className="flex gap-1 ml-auto">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-8 w-8 p-0"
+                    onClick={handleSaveGlobalSettings}
+                    disabled={isGlobalLoading}
+                  >
+                    <Check className="h-4 w-4 text-green-600" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-8 w-8 p-0"
+                    onClick={handleCancelGlobalEdit}
+                    disabled={isGlobalLoading}
+                  >
+                    <X className="h-4 w-4 text-red-600" />
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl font-bold text-primary">
+                    {globalMaxParticipants}
+                  </span>
+                  <span className="text-muted-foreground">명</span>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleEditGlobalSettings}
+                  className="flex items-center gap-1"
+                  disabled={isGlobalLoading}
+                >
+                  <Edit3 className="h-4 w-4" />
+                  수정
+                </Button>
+              </div>
+            )}
+
+            <p className="text-sm text-muted-foreground mt-3">
+              모든 시간대에 적용되는 최대 신청인원입니다.
+            </p>
+          </div>
         </div>
       </div>
 
@@ -318,12 +488,14 @@ export default function AdminDashboard() {
                       variant={
                         slot.current_participants === 0
                           ? 'secondary'
-                          : slot.current_participants >= 3
+                          : slot.current_participants >=
+                            (slot.max_participants || globalMaxParticipants)
                           ? 'destructive'
                           : 'default'
                       }
                     >
-                      신청인원 {slot.current_participants}/3명
+                      신청인원 {slot.current_participants}/
+                      {slot.max_participants || globalMaxParticipants}명
                     </Badge>
                   </div>
                   <div className="w-32 flex justify-end">

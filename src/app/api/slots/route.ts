@@ -48,6 +48,7 @@ export async function GET(request: NextRequest) {
         console.log('Creating slots for date:', date);
 
         // 오전 7시부터 오후 6시까지 (7:00-18:00 시작, 8:00-19:00 종료)
+        // max_participants는 이제 global_settings에서 관리되므로 여기서 설정하지 않음
         const timeSlots = [];
         for (let hour = 7; hour <= 18; hour++) {
           const startTime = `${hour.toString().padStart(2, '0')}:00:00`;
@@ -57,7 +58,6 @@ export async function GET(request: NextRequest) {
             date,
             start_time: startTime,
             end_time: endTime,
-            max_participants: 3, // 하루당 최대 3명으로 제한
           });
         }
 

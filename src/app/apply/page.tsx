@@ -298,16 +298,23 @@ export default function ApplyPage() {
                   </div>
                   <div className="flex-1 flex justify-center pr-2">
                     <Badge variant="secondary">
-                      신청인원 {slot.current_participants}/3명
+                      신청인원 {slot.current_participants}/
+                      {slot.max_participants || 3}명
                     </Badge>
                   </div>
                   <div className="w-32 flex justify-end">
                     <Button
                       className="h-10 px-4"
-                      disabled={isLoading || slot.current_participants >= 3}
+                      disabled={
+                        isLoading ||
+                        slot.current_participants >=
+                          (slot.max_participants || 3)
+                      }
                       onClick={() => setConfirmDialog({ open: true, slot })}
                     >
-                      {slot.current_participants >= 3 ? '마감' : '신청하기'}
+                      {slot.current_participants >= (slot.max_participants || 3)
+                        ? '마감'
+                        : '신청하기'}
                     </Button>
                   </div>
                 </div>
