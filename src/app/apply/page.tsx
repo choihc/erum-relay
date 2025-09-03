@@ -122,6 +122,21 @@ export default function ApplyPage() {
       const result = await response.json();
 
       if (!response.ok) {
+        // 마감 또는 동시성 관련 에러는 더 구체적인 메시지 표시
+        if (response.status === 400 && result.error?.includes('마감')) {
+          // 마감된 경우 슬롯 목록 새로고침
+          if (selectedDate) {
+            await fetchSlots(selectedDate);
+          }
+          throw new Error(
+            '해당 시간대가 마감되었습니다. 다른 시간대를 선택해주세요.'
+          );
+        } else if (response.status === 409) {
+          // 동시 신청 실패
+          throw new Error(
+            result.error || '동시 신청이 많습니다. 잠시 후 다시 시도해주세요.'
+          );
+        }
         throw new Error(result.error || '신청에 실패했습니다.');
       }
 

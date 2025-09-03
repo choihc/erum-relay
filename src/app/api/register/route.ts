@@ -96,46 +96,105 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 시간대 정보 및 여유 자리 확인
-    const { data: slotStatus, error: slotError } = await supabaseAdmin
-      .from('slot_status')
-      .select('*')
-      .eq('id', slotId)
-      .single();
+    // 재시도 로직으로 동시성 제어 (Race Condition 해결)
+    const maxRetries = 3;
+    const retryDelay = 100; // 100ms
+    let attempt = 0;
+    let registration;
 
-    if (slotError) {
-      console.error('Slot check error:', slotError);
-      return NextResponse.json(
-        { error: '시간대 정보 확인 중 오류가 발생했습니다.' },
-        { status: 500 }
-      );
-    }
+    while (attempt < maxRetries) {
+      try {
+        // 최신 시간대 상태 확인
+        const { data: currentSlotStatus, error: slotError } =
+          await supabaseAdmin
+            .from('slot_status')
+            .select('*')
+            .eq('id', slotId)
+            .single();
 
-    if (!slotStatus) {
-      return NextResponse.json(
-        { error: '존재하지 않는 시간대입니다.' },
-        { status: 404 }
-      );
-    }
+        if (slotError) {
+          console.error('Slot check error:', slotError);
+          return NextResponse.json(
+            { error: '시간대 정보 확인 중 오류가 발생했습니다.' },
+            { status: 500 }
+          );
+        }
 
-    // 최대 인원 제한 없음 - available_spots 체크 제거
+        if (!currentSlotStatus) {
+          return NextResponse.json(
+            { error: '존재하지 않는 시간대입니다.' },
+            { status: 404 }
+          );
+        }
 
-    // 신청 등록
-    const { data: registration, error: registrationError } = await supabaseAdmin
-      .from('registrations')
-      .insert({
-        user_id: user.id,
-        slot_id: slotId,
-      })
-      .select('*')
-      .single();
+        // 마감 체크 - available_spots이 0 이하이면 마감
+        if (currentSlotStatus.available_spots <= 0) {
+          return NextResponse.json(
+            { error: '해당 시간대는 마감되었습니다.' },
+            { status: 400 }
+          );
+        }
 
-    if (registrationError) {
-      console.error('Registration error:', registrationError);
-      return NextResponse.json(
-        { error: '신청 등록 중 오류가 발생했습니다.' },
-        { status: 500 }
-      );
+        // 신청 등록 시도
+        const { data: newRegistration, error: registrationError } =
+          await supabaseAdmin
+            .from('registrations')
+            .insert({
+              user_id: user.id,
+              slot_id: slotId,
+            })
+            .select('*')
+            .single();
+
+        if (registrationError) {
+          // 중복 키 오류 (23505) - 동시 신청으로 인한 실패
+          if (registrationError.code === '23505') {
+            console.log(
+              `Registration attempt ${
+                attempt + 1
+              } failed due to concurrent access, retrying...`
+            );
+            attempt++;
+
+            if (attempt >= maxRetries) {
+              return NextResponse.json(
+                {
+                  error:
+                    '동시 신청이 많아 처리에 실패했습니다. 잠시 후 다시 시도해주세요.',
+                },
+                { status: 409 }
+              );
+            }
+
+            // 재시도 전 잠시 대기
+            await new Promise((resolve) => setTimeout(resolve, retryDelay));
+            continue;
+          }
+
+          // 기타 오류
+          console.error('Registration error:', registrationError);
+          return NextResponse.json(
+            { error: '신청 등록 중 오류가 발생했습니다.' },
+            { status: 500 }
+          );
+        }
+
+        // 성공적으로 등록됨
+        registration = newRegistration;
+        break;
+      } catch (error) {
+        console.error(`Registration attempt ${attempt + 1} error:`, error);
+        attempt++;
+
+        if (attempt >= maxRetries) {
+          return NextResponse.json(
+            { error: '신청 처리 중 오류가 발생했습니다. 다시 시도해주세요.' },
+            { status: 500 }
+          );
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, retryDelay));
+      }
     }
 
     return NextResponse.json({
