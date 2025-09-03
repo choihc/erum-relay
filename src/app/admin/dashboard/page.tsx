@@ -65,9 +65,9 @@ export default function AdminDashboard() {
   const [scrollPosition, setScrollPosition] = useState(0);
 
   // 글로벌 설정 관련 state
-  const [globalMaxParticipants, setGlobalMaxParticipants] = useState<number>(3);
+  const [globalMaxParticipants, setGlobalMaxParticipants] = useState<number>(0);
   const [isEditingGlobal, setIsEditingGlobal] = useState(false);
-  const [globalEditValue, setGlobalEditValue] = useState<string>('3');
+  const [globalEditValue, setGlobalEditValue] = useState<string>('');
   const [isGlobalLoading, setIsGlobalLoading] = useState(false);
 
   useEffect(() => {
@@ -316,7 +316,7 @@ export default function AdminDashboard() {
             현재 총 신청 건수
           </h3>
           <p className="text-4xl font-bold text-primary">
-            {stats ? `${stats.totalRegistrations}` : ''}건
+            {stats ? `${stats.totalRegistrations}` : '-'}건
           </p>
         </div>
       </div>
@@ -376,7 +376,7 @@ export default function AdminDashboard() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="text-2xl font-bold text-primary">
-                    {globalMaxParticipants}
+                    {globalMaxParticipants < 1 ? '-' : globalMaxParticipants}
                   </span>
                   <span className="text-muted-foreground">명</span>
                 </div>
