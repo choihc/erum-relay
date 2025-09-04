@@ -335,7 +335,7 @@ export default function ApplyPage() {
                           variant="outline"
                           className="bg-orange-100 text-orange-800 border-orange-300"
                         >
-                          고 배윤재선교사 순교 16주기 추모예배
+                          故 배윤재선교사 순교 16주기 추모예배
                         </Badge>
                       </div>
                     ) : (
