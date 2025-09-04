@@ -168,6 +168,14 @@ export default function ApplyPage() {
     return timeStr.substring(0, 5);
   };
 
+  // 9월 15일 09:00-12:00 추모예배 시간대인지 확인하는 함수
+  const isMemorialServiceTime = (slot: SlotStatus) => {
+    if (slot.date !== '2025-09-15') return false;
+
+    const startHour = parseInt(slot.start_time.substring(0, 2));
+    return startHour >= 9 && startHour < 12; // 09:00, 10:00, 11:00 시작 시간대
+  };
+
   // 9월 8일~26일 평일만 선택 가능하도록 필터링
   const isSelectableDate = (date: Date) => {
     const day = date.getDay();
@@ -303,37 +311,70 @@ export default function ApplyPage() {
             </div>
           ) : (
             <div className="space-y-3 max-w-4xl mx-auto">
-              {slots.map((slot) => (
-                <div
-                  key={slot.id}
-                  className="flex items-center p-4 border rounded-lg bg-background hover:bg-accent/50 transition-colors"
-                >
-                  <div className="font-medium text-lg w-35 flex-shrink-0">
-                    {formatTime(slot.start_time)} ~ {formatTime(slot.end_time)}
-                  </div>
-                  <div className="flex-1 flex justify-center pr-2">
-                    <Badge variant="secondary">
-                      신청인원 {slot.current_participants}/
-                      {slot.max_participants || 3}명
-                    </Badge>
-                  </div>
-                  <div className="w-32 flex justify-end">
-                    <Button
-                      className="h-10 px-4"
-                      disabled={
-                        isLoading ||
-                        slot.current_participants >=
+              {slots.map((slot) => {
+                const isMemorial = isMemorialServiceTime(slot);
+
+                return (
+                  <div
+                    key={slot.id}
+                    className={`flex items-center p-4 border rounded-lg transition-colors ${
+                      isMemorial
+                        ? 'bg-orange-50 border-orange-200'
+                        : 'bg-background hover:bg-accent/50'
+                    }`}
+                  >
+                    <div className="font-medium text-lg w-35 flex-shrink-0">
+                      {formatTime(slot.start_time)} ~{' '}
+                      {formatTime(slot.end_time)}
+                    </div>
+
+                    {isMemorial ? (
+                      // 추모예배 시간대: 특별 메시지 표시
+                      <div className="flex-1 flex justify-center pr-2">
+                        <Badge
+                          variant="outline"
+                          className="bg-orange-100 text-orange-800 border-orange-300"
+                        >
+                          고 배윤재선교사 순교 16주기 추모예배
+                        </Badge>
+                      </div>
+                    ) : (
+                      // 일반 시간대: 신청인원 표시
+                      <div className="flex-1 flex justify-center pr-2">
+                        <Badge variant="secondary">
+                          신청인원 {slot.current_participants}/
+                          {slot.max_participants || 3}명
+                        </Badge>
+                      </div>
+                    )}
+
+                    <div className="w-32 flex justify-end">
+                      {isMemorial ? (
+                        // 추모예배 시간대: 신청 불가 표시
+                        <div className="text-sm text-muted-foreground text-center px-4">
+                          신청 불가
+                        </div>
+                      ) : (
+                        // 일반 시간대: 신청하기 버튼
+                        <Button
+                          className="h-10 px-4"
+                          disabled={
+                            isLoading ||
+                            slot.current_participants >=
+                              (slot.max_participants || 3)
+                          }
+                          onClick={() => setConfirmDialog({ open: true, slot })}
+                        >
+                          {slot.current_participants >=
                           (slot.max_participants || 3)
-                      }
-                      onClick={() => setConfirmDialog({ open: true, slot })}
-                    >
-                      {slot.current_participants >= (slot.max_participants || 3)
-                        ? '마감'
-                        : '신청하기'}
-                    </Button>
+                            ? '마감'
+                            : '신청하기'}
+                        </Button>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

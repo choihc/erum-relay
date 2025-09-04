@@ -127,6 +127,22 @@ export async function POST(request: NextRequest) {
           );
         }
 
+        // 9월 15일 09:00-12:00 추모예배 시간대 신청 방지
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const isMemorialServiceTime = (slot: any) => {
+          if (slot.date !== '2025-09-15') return false;
+
+          const startHour = parseInt(slot.start_time.substring(0, 2));
+          return startHour >= 9 && startHour < 12; // 09:00, 10:00, 11:00 시작 시간대
+        };
+
+        if (isMemorialServiceTime(currentSlotStatus)) {
+          return NextResponse.json(
+            { error: '추모예배 시간대는 신청할 수 없습니다.' },
+            { status: 400 }
+          );
+        }
+
         // 마감 체크 - available_spots이 0 이하이면 마감
         if (currentSlotStatus.available_spots <= 0) {
           return NextResponse.json(
